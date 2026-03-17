@@ -117,20 +117,19 @@
     }
 
     .block-code {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  background: #dbe4ff;   /* color más fuerte */
-  padding: 6px 14px;      /* más grande, más centrado */
-  border-radius: 999px;
-  color: #1e3a8a;         /* azul más definido */
-  white-space: nowrap;
-  min-width: 90px;        /* ayuda al centrado visual */
-  text-align: center;
-}
-
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: #dbe4ff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      color: #1e3a8a;
+      white-space: nowrap;
+      min-width: 90px;
+      text-align: center;
+    }
 
     label {
       font-size: 0.8rem;
@@ -149,11 +148,8 @@
       outline: none;
     }
 
-    input::placeholder {
-      color: #9ca3af;
-    }
+    input::placeholder { color: #9ca3af; }
 
-    /* RESPONSABLE MAYÚSCULAS */
     #responsable { text-transform: uppercase; }
 
     .footer {
@@ -214,10 +210,8 @@
       <p class="subtitle">Registrar cantidades físicas.</p>
 
       <form id="inventarioForm">
-
         <div class="blocks">
 
-          <!-- MANTAS 40 FT -->
           <section class="block">
             <div class="block-header">
               <div>
@@ -226,12 +220,10 @@
               </div>
               <div class="block-code">IFR0040417</div>
             </div>
-
             <label>Unidades</label>
             <input id="mantas40" type="number" min="0" step="1" placeholder="0" />
           </section>
 
-          <!-- MANTAS 20 FT (SIN REFERENCIA EXTRA) -->
           <section class="block">
             <div class="block-header">
               <div>
@@ -240,23 +232,30 @@
               </div>
               <div class="block-code">IFR0040419</div>
             </div>
-
             <label>Unidades</label>
             <input id="mantas20" type="number" min="0" step="1" placeholder="0" />
           </section>
 
-          <!-- BOLSAS -->
           <section class="block">
             <div class="block-header">
               <div class="block-title">Bolsas de Aire 100×185</div>
               <div class="block-code">IFR0040092</div>
             </div>
-
-            <label>Cajas Cerradas</label>
+            <label>Cajas Cerradas (x20)</label>
             <input id="cajasBolsas" type="number" min="0" step="1" placeholder="0" />
-
-            <label style="margin-top:10px;">Bolsas sueltas</label>
+            <label style="margin-top:10px; display:block;">Bolsas sueltas</label>
             <input id="bolsasSueltas" type="number" min="0" step="1" placeholder="0" />
+          </section>
+
+          <section class="block">
+            <div class="block-header">
+              <div class="block-title">Precintos Metálicos</div>
+              <div class="block-code">IFR0040142</div>
+            </div>
+            <label>Racimos (x20)</label>
+            <input id="racimosPrecintos" type="number" min="0" step="1" placeholder="0" />
+            <label style="margin-top:10px; display:block;">Precintos sueltos</label>
+            <input id="precintosSueltos" type="number" min="0" step="1" placeholder="0" />
           </section>
 
         </div>
@@ -271,11 +270,9 @@
 
           <div class="preview" id="previewBox">
             <ul id="previewList"></ul>
-
             <button type="button" class="btn btn-ghost" id="btnEditar">
               Editar valores
             </button>
-
             <button type="button" class="btn btn-primary" id="btnConfirmar">
               Confirmar y enviar
             </button>
@@ -283,7 +280,6 @@
 
           <div class="status" id="statusMsg"></div>
         </div>
-
       </form>
     </div>
   </div>
@@ -295,20 +291,21 @@
   const mantas20El = document.getElementById("mantas20");
   const cajasEl = document.getElementById("cajasBolsas");
   const sueltasEl = document.getElementById("bolsasSueltas");
+  const racimosEl = document.getElementById("racimosPrecintos");
+  const sueltosPrecEl = document.getElementById("precintosSueltos");
   const responsableEl = document.getElementById("responsable");
 
   const previewBox = document.getElementById("previewBox");
   const previewList = document.getElementById("previewList");
   const statusMsg = document.getElementById("statusMsg");
 
-  // Solo dígitos
-  [mantas40El, mantas20El, cajasEl, sueltasEl].forEach(el => {
+  // Validación: Solo dígitos
+  [mantas40El, mantas20El, cajasEl, sueltasEl, racimosEl, sueltosPrecEl].forEach(el => {
     el.addEventListener("input", () => {
       el.value = el.value.replace(/[^\d]/g, "");
     });
   });
 
-  // Responsable siempre mayúsculas
   responsableEl.addEventListener("input", () => {
     responsableEl.value = responsableEl.value.toUpperCase();
   });
@@ -320,8 +317,6 @@
 
   document.getElementById("btnPreliminar").addEventListener("click", () => {
     const responsable = responsableEl.value.trim().toUpperCase();
-    responsableEl.value = responsable;
-
     if (!responsable) {
       statusMsg.textContent = "El responsable es obligatorio.";
       statusMsg.className = "status err";
@@ -331,14 +326,20 @@
 
     const m40 = toInt(mantas40El);
     const m20 = toInt(mantas20El);
-    const c = toInt(cajasEl);
-    const s = toInt(sueltasEl);
-    const total = c * 20 + s;
+    
+    const cBolsas = toInt(cajasEl);
+    const sBolsas = toInt(sueltasEl);
+    const totalBolsas = cBolsas * 20 + sBolsas;
+
+    const rPrecintos = toInt(racimosEl);
+    const sPrecintos = toInt(sueltosPrecEl);
+    const totalPrecintos = rPrecintos * 20 + sPrecintos;
 
     previewList.innerHTML = `
       <li><strong>Mantas 40 ft:</strong> ${m40}</li>
       <li><strong>Mantas 20 ft:</strong> ${m20}</li>
-      <li><strong>Bolsas:</strong> ${total} ( ${c} cajas × 20 + ${s} )</li>
+      <li><strong>Bolsas Aire:</strong> ${totalBolsas} (${cBolsas} c. + ${sBolsas} s.)</li>
+      <li><strong>Precintos Metálicos:</strong> ${totalPrecintos} (${rPrecintos} r. + ${sPrecintos} s.)</li>
       <li><strong>Responsable:</strong> ${responsable}</li>
     `;
 
@@ -352,27 +353,27 @@
 
   document.getElementById("btnConfirmar").addEventListener("click", async () => {
     const responsable = responsableEl.value.trim().toUpperCase();
-    if (!responsable) {
-      statusMsg.textContent = "El responsable es obligatorio.";
-      statusMsg.className = "status err";
-      statusMsg.style.display = "block";
-      return;
-    }
-
+    
     const payload = {
       mantas40: {
-        codigo40: "IFR0040417", // Antes decías codigo20
-        cantidad40: toInt(mantas40El) // Antes decías cantidad20
+        codigo40: "IFR0040417",
+        cantidad40: toInt(mantas40El)
       },
       mantas20: {
-        codigo20: "IFR0040419", // Antes decías codigo40
-        cantidad20: toInt(mantas20El) // Antes decías cantidad40
+        codigo20: "IFR0040419",
+        cantidad20: toInt(mantas20El)
       },
       bolsas: {
         codigoBolsas: "IFR0040092",
         cajasCerradas: toInt(cajasEl),
         bolsasSueltas: toInt(sueltasEl),
         totalBolsas: toInt(cajasEl) * 20 + toInt(sueltasEl)
+      },
+      precintos: {
+        codigoPrecintos: "IFR0040142",
+        racimos: toInt(racimosEl),
+        sueltos: toInt(sueltosPrecEl),
+        totalPrecintos: toInt(racimosEl) * 20 + toInt(sueltosPrecEl)
       },
       responsable: responsable,
       timestamp: new Date().toISOString()
@@ -394,6 +395,7 @@
       statusMsg.textContent = "Inventario enviado correctamente.";
       statusMsg.className = "status ok";
       previewBox.style.display = "none";
+      document.getElementById("inventarioForm").reset();
 
     } catch (e) {
       statusMsg.textContent = "Error al enviar: " + e.message;
@@ -404,4 +406,3 @@
 
 </body>
 </html>
-
